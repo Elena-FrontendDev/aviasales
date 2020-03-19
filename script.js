@@ -106,7 +106,7 @@ const flightPrice = new FlightPrice(calendar, options);
 flightPrice.getPrice()
     .then((res) => {
         res.best_prices.forEach(element => {
-            if (element.depart_date === '2020-05-25') {
+            if (element.depart_date === options.depart_date) {
                 console.log(element);
             }
             });       
