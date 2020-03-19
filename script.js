@@ -105,7 +105,11 @@ const flightPrice = new FlightPrice(calendar, options);
 //Обращаемся к методу класса для получения данных по запросу к API
 flightPrice.getPrice()
     .then((res) => {
-        console.log(res);
+        res.best_prices.forEach(element => {
+            if (element.depart_date === '2020-05-25') {
+                console.log(element);
+            }
+            });       
     })
     .catch((err)=> {
         console.log(`Ошибка: ${err}`);
