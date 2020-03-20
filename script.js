@@ -45,11 +45,19 @@ const showCity = (input, list) => {
     list.textContent = '';
 
     if (input.value !== '') {
-    
+        
         const filterCity = city.filter((item) => {
             const inputRegExp = new RegExp(input.value, 'gi');
-            return item.name.match(inputRegExp);
+            return  item.name.match(inputRegExp);  //не реализован полный функционал
         });
+
+        filterCity.sort(function(a, b) {
+            if (a.name < b.name) return -1;
+            if (b.name < a.name) return 1; 
+          return 0;
+        });
+        console.log(filterCity);
+        
 
         filterCity.forEach((item) => {
             const li = document.createElement('li');
@@ -68,7 +76,33 @@ const selectCity = (event, input, list) => {
         input.value = target.textContent;
         list.textContent = '';
     }
-}
+};
+
+
+const renderCheapDay = (cheapTicket) => {
+    console.log(cheapTicket);
+    
+};
+
+//Отсортируем массив с билетами по цене от меньшего к большему
+const renderCheapYear = (cheapTickets) => {
+    cheapTickets.sort(function (a, b) {
+        return a.value - b.value; 
+    });
+    console.log(cheapTickets);
+};
+
+
+const renderCheap = (data, date) => {
+    const cheapTicketYear = JSON.parse(data).best_prices;
+
+    const cheapTicketDay = cheapTicketYear.filter((item) => {
+        return item.depart_date === date;
+    }) 
+    
+    renderCheapDay(cheapTicketDay);
+    renderCheapYear(cheapTicketYear);
+};
 
 
 //Отправляем запрос к API для получения списка городов 
@@ -76,44 +110,6 @@ const selectCity = (event, input, list) => {
 getData(proxy + citiesApi, (data) => {
     city = JSON.parse(data).filter((item) => item.name)
 });
-
-
-//Класс для получения ответа от API календаря цен по параметрам запроса 
-class FlightPrice {
-    constructor (calendarUrl, options) {
-        this.url = calendarUrl;
-        this.origin = options.origin;
-        this.destination = options.destination;
-        this.depart_date = options.depart_date;
-        this.one_way = options.one_way;
-    }
-
-    getPrice() {
-        return fetch(`${this.url}?origin=${this.origin}&destination=${this.destination}&depart_date=${this.depart_date}&one_way=${this.one_way}`
-        )
-          .then((res) => {
-                if (res.ok) {
-                return res.json();
-                }
-                return Promise.reject(`Ошибка: ${res.status}`);
-          })
-    } 
-}
-
-const flightPrice = new FlightPrice(calendar, options);
-
-//Обращаемся к методу класса для получения данных по запросу к API
-flightPrice.getPrice()
-    .then((res) => {
-        res.best_prices.forEach(element => {
-            if (element.depart_date === options.depart_date) {
-                console.log(element);
-            }
-            });       
-    })
-    .catch((err)=> {
-        console.log(`Ошибка: ${err}`);
-    })
 
 
 // Обработчик для поля ввода 'Откуда'
@@ -137,4 +133,30 @@ dropdownCitiesFrom.addEventListener('click', (event) => {
 // Обработчик для выбора города и записи его названия в поле ввода 'Куда'
 dropdownCitiesTo.addEventListener('click', (event) => {
     selectCity(event, inputCitiesTo, dropdownCitiesTo);
+});
+
+
+formSearch.addEventListener('submit', () => {
+    event.preventDefault();
+    const cityFrom = city.find((item) => inputCitiesFrom.value === item.name);
+    const cityTo = city.find((item) => inputCitiesTo.value === item.name);
+
+    //Проверяем, что пользователь ввел валидные названия городов
+    if (cityFrom && cityTo) {
+        const formData = {
+            from: cityFrom.code,
+            to: cityTo.code,
+            when: inputDateDepart.value,
+        }
+    
+        const requestData = `?dapart_date=${formData.when}&origin=${formData.from}&destination=${formData.to}&one_way=true`
+    
+            getData(calendar + requestData, (response) => {
+                renderCheap(response, formData.when);
+            })
+        
+    } else {
+        console.log('Извините, город не найден');
+    }
+    
 });
